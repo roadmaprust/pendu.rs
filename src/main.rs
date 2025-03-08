@@ -94,3 +94,45 @@ impl Game {
         self.allowed_error == 0
     }
 }
+
+#[cfg(test)]
+mod tests {
+use super::*;
+
+    #[test]
+    fn init_game() {
+        let game = Game::init("sherli".to_string(), 3);
+        assert_eq!(game.secret_word, "sherli".to_string());
+        assert_eq!(game.allowed_error, 3);
+        assert_eq!(game.output, "______".to_string());
+    }
+
+    #[test]
+    fn check_input_fn_modify_hashset() {
+        let mut game: Game = Game::init("sherli".to_string(), 5);
+        game.input('s');
+        assert_eq!(game.secret_word, "sherli".to_string());
+        assert_eq!(game.allowed_error, 5);
+        assert_eq!(game.char.contains(&'s'), true);
+    }
+
+    #[test]
+    fn check_update_output_fn() {
+        let mut game: Game = Game::init("sherli".to_string(), 5);
+        game.input('s');
+        assert_eq!(game.secret_word, "sherli".to_string());
+        assert_eq!(game.allowed_error, 5);
+        assert_eq!(game.char.contains(&'s'), true);
+        assert_eq!(game.output, "s_____".to_string());
+    }
+
+    #[test]
+    fn check_input_fn_decrement_allowed_errors() {
+        let mut game: Game = Game::init("sherli".to_string(), 5);
+        game.input('z');
+        assert_eq!(game.secret_word, "sherli".to_string());
+        assert_eq!(game.allowed_error, 4);
+        assert_eq!(game.char.contains(&'s'), false);
+        assert_eq!(game.output, "______".to_string());
+    }
+}
