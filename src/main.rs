@@ -1,12 +1,10 @@
+use rpassword::read_password;
 use std::collections::HashSet;
 use std::io::stdin;
 
 fn main() {
-    let mut mot_a_deviner = String::new();
     println!("Entre le mot secret : ");
-    stdin()
-        .read_line(&mut mot_a_deviner)
-        .expect("Erreur de lecture");
+    let mot_a_deviner = read_password().expect("erreur de lecture du mot secret");
 
     // Nettoyer le mot secret
     let mot_a_deviner = mot_a_deviner.trim().to_string();
@@ -14,7 +12,7 @@ fn main() {
     let mut game = Game::init(mot_a_deviner, 5);
 
     loop {
-        println!("\nMot actuel : {}", game.output);
+        Game::print_actual_word(&game.output);
         println!("Erreurs restantes : {}", game.allowed_error);
 
         if game.has_won() {
@@ -33,8 +31,8 @@ fn main() {
         stdin().read_line(&mut c).expect("Erreur de lecture");
 
         let c = c.trim(); // Nettoyer l'entrée (shadowing)
-        if c.len() != 1 {
-            println!("❌ Entrée invalide ! Entre un seul caractère.");
+        if c.len() != 1 || !c.chars().next().unwrap().is_alphabetic() {
+            println!("❌ Entrée invalide ! Entre une seule lettre.");
             continue;
         }
 
@@ -61,6 +59,8 @@ impl Game {
     }
 
     pub fn input(&mut self, input: char) {
+        let input = input.to_ascii_lowercase();
+
         if self.char.contains(&input) {
             println!("🔁 Lettre déjà testée !");
             return;
@@ -86,6 +86,13 @@ impl Game {
         self.output = output_char.into_iter().collect();
     }
 
+    fn print_actual_word(mot: &str) {
+        println!(
+            "\nMot actuel : {}",
+            mot.chars().map(|c| format!("{} ", c)).collect::<String>()
+        )
+    }
+
     pub fn has_won(&self) -> bool {
         self.output == self.secret_word
     }
@@ -97,7 +104,7 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-use super::*;
+    use super::*;
 
     #[test]
     fn init_game() {
@@ -134,5 +141,15 @@ use super::*;
         assert_eq!(game.allowed_error, 4);
         assert_eq!(game.char.contains(&'s'), false);
         assert_eq!(game.output, "______".to_string());
+    }
+
+    #[test]
+    fn check_input_uppercase() {
+        let mut game: Game = Game::init("sherli".to_string(), 5);
+        game.input('S');
+        assert_eq!(game.secret_word, "sherli".to_string());
+        assert_eq!(game.allowed_error, 5);
+        assert_eq!(game.char.contains(&'s'), true);
+        assert_eq!(game.output, "s_____".to_string());
     }
 }
