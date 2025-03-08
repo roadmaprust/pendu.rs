@@ -12,7 +12,7 @@ fn main() {
     let mut game = Game::init(mot_a_deviner, 5);
 
     loop {
-        println!("\nMot actuel : {}", game.output);
+        Game::print_actual_word(&game.output);
         println!("Erreurs restantes : {}", game.allowed_error);
 
         if game.has_won() {
@@ -82,6 +82,13 @@ impl Game {
             }
         }
         self.output = output_char.into_iter().collect();
+    }
+
+    fn print_actual_word(mot: &str) {
+        println!(
+            "\nMot actuel : {}",
+            mot.chars().map(|c| format!("{} ", c)).collect::<String>()
+        )
     }
 
     pub fn has_won(&self) -> bool {
