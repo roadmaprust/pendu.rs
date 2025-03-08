@@ -31,8 +31,8 @@ fn main() {
         stdin().read_line(&mut c).expect("Erreur de lecture");
 
         let c = c.trim(); // Nettoyer l'entrée (shadowing)
-        if c.len() != 1 {
-            println!("❌ Entrée invalide ! Entre un seul caractère.");
+        if c.len() != 1 || !c.chars().next().unwrap().is_alphabetic() {
+            println!("❌ Entrée invalide ! Entre une seule lettre.");
             continue;
         }
 
@@ -59,6 +59,8 @@ impl Game {
     }
 
     pub fn input(&mut self, input: char) {
+        let input = input.to_ascii_lowercase();
+
         if self.char.contains(&input) {
             println!("🔁 Lettre déjà testée !");
             return;
@@ -139,5 +141,15 @@ mod tests {
         assert_eq!(game.allowed_error, 4);
         assert_eq!(game.char.contains(&'s'), false);
         assert_eq!(game.output, "______".to_string());
+    }
+
+    #[test]
+    fn check_input_uppercase() {
+        let mut game: Game = Game::init("sherli".to_string(), 5);
+        game.input('S');
+        assert_eq!(game.secret_word, "sherli".to_string());
+        assert_eq!(game.allowed_error, 5);
+        assert_eq!(game.char.contains(&'s'), true);
+        assert_eq!(game.output, "s_____".to_string());
     }
 }
