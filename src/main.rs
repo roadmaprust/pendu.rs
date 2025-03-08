@@ -1,12 +1,10 @@
+use rpassword::read_password;
 use std::collections::HashSet;
 use std::io::stdin;
 
 fn main() {
-    let mut mot_a_deviner = String::new();
     println!("Entre le mot secret : ");
-    stdin()
-        .read_line(&mut mot_a_deviner)
-        .expect("Erreur de lecture");
+    let mot_a_deviner = read_password().expect("erreur de lecture du mot secret");
 
     // Nettoyer le mot secret
     let mot_a_deviner = mot_a_deviner.trim().to_string();
@@ -97,7 +95,7 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-use super::*;
+    use super::*;
 
     #[test]
     fn init_game() {
