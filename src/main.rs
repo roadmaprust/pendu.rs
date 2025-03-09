@@ -1,32 +1,68 @@
+use rand::seq::SliceRandom;
 use rpassword::read_password;
 use std::collections::HashSet;
-use std::io::stdin;
+use std::fs::OpenOptions;
+use std::io::{Write, stdin};
 
 fn main() {
-    println!("Entre le mot secret : ");
-    let mot_a_deviner = read_password().expect("erreur de lecture du mot secret");
+    println!("📌 Bienvenue dans le jeu du pendu !");
 
-    // Nettoyer le mot secret
-    let mot_a_deviner = mot_a_deviner.trim().to_string();
+    println!(
+        "Choisis la difficulté : 1 - Facile (10 erreurs), 2 - Moyen (6 erreurs), 3 - Difficile (3 erreurs)"
+    );
+    let mut choix: String = String::new();
+    stdin().read_line(&mut choix).expect("Erreur de lecture");
 
-    let mut game = Game::init(mot_a_deviner, 5);
+    let nb_erreur_autorise = match choix.trim() {
+        "1" => 10,
+        "2" => 6,
+        "3" => 3,
+        _ => 5,
+    };
+
+    println!("1️⃣ Mode Solo (mot aléatoire)");
+    println!("2️⃣ Mode 2 joueurs (un joueur entre le mot secret)");
+
+    let mut choix: String = String::new();
+    print!("👉 Choisis une option (1 ou 2) : ");
+    std::io::stdout().flush().unwrap(); // Force l'affichage immédiat
+
+    stdin().read_line(&mut choix).expect("Erreur de lecture");
+    let choix = choix.trim();
+
+    let mot_a_deviner: String = if choix == "1" {
+        choisir_mot_aleatoire()
+    } else {
+        print!("🔒 Entre le mot secret : ");
+        std::io::stdout().flush().unwrap();
+        let mot = read_password().expect("Erreur de lecture");
+        mot.trim().to_string()
+    };
+
+    let mut game: Game = Game::init(mot_a_deviner, nb_erreur_autorise);
 
     loop {
         Game::print_actual_word(&game.output);
         println!("Erreurs restantes : {}", game.allowed_error);
 
         if game.has_won() {
+            let score: usize = game.allowed_error as usize * 10;
             println!(
-                "🎉 Félicitations ! Tu as trouvé le mot : {}",
-                game.secret_word
+                "🎉 Félicitations ! Tu as trouvé le mot : {}\n Score final {}",
+                game.secret_word, score
             );
+            println!("Entrez votre nom : ");
+            let mut nom = String::new();
+            stdin().read_line(&mut nom).expect("Erreur de lecture");
+            let nom = nom.trim();
+            enregistrer_score(nom, score);
             break;
         } else if game.has_lost() {
             println!("💀 Dommage ! Le mot était : {}", game.secret_word);
             break;
         }
 
-        let mut c = String::new();
+        let mut c: String = String::new();
         println!("Entre un caractère : ");
         stdin().read_line(&mut c).expect("Erreur de lecture");
 
@@ -102,6 +138,29 @@ impl Game {
     }
 }
 
+fn choisir_mot_aleatoire() -> String {
+    let mots = vec![
+        "rust",
+        "programmation",
+        "sherli",
+        "pendu",
+        "jeu",
+        "asynchrone",
+    ];
+    let mot_choisi = mots.choose(&mut rand::thread_rng()).unwrap();
+    mot_choisi.to_string()
+}
+
+fn enregistrer_score(nom: &str, score: usize) {
+    let mut fichier = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("scores.txt")
+        .expect("Impossible d'ouvrir le fichier");
+
+    writeln!(fichier, "{} : {}", nom, score).expect("Erreur d'écriture");
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -120,7 +179,7 @@ mod tests {
         game.input('s');
         assert_eq!(game.secret_word, "sherli".to_string());
         assert_eq!(game.allowed_error, 5);
-        assert_eq!(game.char.contains(&'s'), true);
+        assert!(game.char.contains(&'s'));
     }
 
     #[test]
@@ -129,7 +188,7 @@ mod tests {
         game.input('s');
         assert_eq!(game.secret_word, "sherli".to_string());
         assert_eq!(game.allowed_error, 5);
-        assert_eq!(game.char.contains(&'s'), true);
+        assert!(game.char.contains(&'s'));
         assert_eq!(game.output, "s_____".to_string());
     }
 
@@ -139,7 +198,7 @@ mod tests {
         game.input('z');
         assert_eq!(game.secret_word, "sherli".to_string());
         assert_eq!(game.allowed_error, 4);
-        assert_eq!(game.char.contains(&'s'), false);
+        assert!(!game.char.contains(&'s'));
         assert_eq!(game.output, "______".to_string());
     }
 
@@ -149,7 +208,27 @@ mod tests {
         game.input('S');
         assert_eq!(game.secret_word, "sherli".to_string());
         assert_eq!(game.allowed_error, 5);
-        assert_eq!(game.char.contains(&'s'), true);
+        assert!(game.char.contains(&'s'));
         assert_eq!(game.output, "s_____".to_string());
+    }
+
+    #[test]
+    fn check_has_won() {
+        let mut game: Game = Game::init("sos".to_string(), 5);
+        game.input('s');
+        assert_eq!(game.secret_word, "sos".to_string());
+        assert_eq!(game.allowed_error, 5);
+        game.input('o');
+        assert!(game.has_won());
+    }
+
+    #[test]
+    fn check_has_lost() {
+        let mut game: Game = Game::init("sos".to_string(), 1);
+        assert_eq!(game.secret_word, "sos".to_string());
+        game.input('t');
+        assert_eq!(game.allowed_error, 0);
+        game.input('r');
+        assert!(game.has_lost());
     }
 }
