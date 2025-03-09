@@ -1,15 +1,30 @@
+use rand::seq::SliceRandom;
 use rpassword::read_password;
 use std::collections::HashSet;
-use std::io::stdin;
+use std::io::{Write, stdin};
 
 fn main() {
-    println!("Entre le mot secret : ");
-    let mot_a_deviner = read_password().expect("erreur de lecture du mot secret");
+    println!("📌 Bienvenue dans le jeu du pendu !");
+    println!("1️⃣ Mode Solo (mot aléatoire)");
+    println!("2️⃣ Mode 2 joueurs (un joueur entre le mot secret)");
 
-    // Nettoyer le mot secret
-    let mot_a_deviner = mot_a_deviner.trim().to_string();
+    let mut choix: String = String::new();
+    print!("👉 Choisis une option (1 ou 2) : ");
+    std::io::stdout().flush().unwrap(); // Force l'affichage immédiat
 
-    let mut game = Game::init(mot_a_deviner, 5);
+    stdin().read_line(&mut choix).expect("Erreur de lecture");
+    let choix = choix.trim();
+
+    let mot_a_deviner: String = if choix == "1" {
+        choisir_mot_aleatoire()
+    } else {
+        print!("🔒 Entre le mot secret : ");
+        std::io::stdout().flush().unwrap();
+        let mot = read_password().expect("Erreur de lecture");
+        mot.trim().to_string()
+    };
+
+    let mut game: Game = Game::init(mot_a_deviner, 5);
 
     loop {
         Game::print_actual_word(&game.output);
@@ -100,6 +115,19 @@ impl Game {
     pub fn has_lost(&self) -> bool {
         self.allowed_error == 0
     }
+}
+
+fn choisir_mot_aleatoire() -> String {
+    let mots = vec![
+        "rust",
+        "programmation",
+        "sherli",
+        "pendu",
+        "jeu",
+        "asynchrone",
+    ];
+    let mot_choisi = mots.choose(&mut rand::thread_rng()).unwrap();
+    mot_choisi.to_string()
 }
 
 #[cfg(test)]
