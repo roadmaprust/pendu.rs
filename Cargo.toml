@@ -3,6 +3,19 @@ name = "pendu"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "game"
+path = "src/game.rs"
+
+[[bin]]
+name = "pendu"
+path = "src/pendu.rs"
+test = false
+
+[[test]]
+name = "tests"
+path = "tests/tests.rs"
+
 [dependencies]
 rpassword = "7.3.1"
 rand = "0.8.5"
