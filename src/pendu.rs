@@ -1,10 +1,10 @@
 mod game;
 
-use rand::seq::SliceRandom;
+use game::Game;
+use rand::prelude::*;
 use rpassword::read_password;
 use std::fs::OpenOptions;
 use std::io::{Write, stdin};
-use game::Game;
 
 fn main() {
     println!("📌 Bienvenue dans le jeu du pendu !");
@@ -51,7 +51,8 @@ fn main() {
             let score: usize = game.get_allowed_error() as usize * 10;
             println!(
                 "🎉 Félicitations ! Tu as trouvé le mot : {}\n Score final {}",
-                game.get_secret_word(), score
+                game.get_secret_word(),
+                score
             );
             println!("Entrez votre nom : ");
             let mut nom = String::new();
@@ -88,7 +89,7 @@ fn choisir_mot_aleatoire() -> String {
         "jeu",
         "asynchrone",
     ];
-    let mot_choisi = mots.choose(&mut rand::thread_rng()).unwrap();
+    let mot_choisi = mots.choose(&mut rand::rng()).unwrap();
     mot_choisi.to_string()
 }
 
